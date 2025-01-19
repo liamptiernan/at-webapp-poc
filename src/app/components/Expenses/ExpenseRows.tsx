@@ -1,9 +1,9 @@
-import { Form, useForm } from "@mantine/form";
+import { useForm } from "@mantine/form";
 import { ExpenseRecord, unitOptions } from "../types";
 import {
   ActionIcon,
-  Button,
   Checkbox,
+  NumberInput,
   Select,
   Table,
   TextInput,
@@ -14,17 +14,12 @@ import {
   IconCircleDashed,
   IconDeviceFloppy,
   IconEdit,
-  IconSquare,
 } from "@tabler/icons-react";
 import { httpsCallable } from "firebase/functions";
 import { functions } from "@/app/firebase/main";
 
-function convertFieldName(field: string) {
-  const split = field.split(/(?=[A-Z])/);
-  return split.join(" ");
-}
-
 function ExpenseRow({ expense }: { expense: ExpenseRecord }) {
+  const [saving, setSaving] = useState(false);
   const [readOnly, setReadOnly] = useState(Boolean(expense.id));
 
   const {
@@ -47,6 +42,7 @@ function ExpenseRow({ expense }: { expense: ExpenseRecord }) {
   const formValues = form.getValues();
 
   const handleExpenseSave = async () => {
+    setSaving(true);
     const { UnitAmount, ...fields } = formValues;
     const updateExpense = httpsCallable(functions, "update_expense");
 
@@ -54,24 +50,25 @@ function ExpenseRow({ expense }: { expense: ExpenseRecord }) {
       expenseId: expense.id,
       fields: { "Unit Amount": UnitAmount, ...fields },
     });
+    setSaving(false);
     setReadOnly(true);
   };
 
   let total = 0;
-  if (UnitAmount && Quantity) {
-    total = UnitAmount * Quantity;
+  if (formValues.UnitAmount && formValues.Quantity) {
+    total = formValues.UnitAmount * formValues.Quantity;
   }
 
   if (readOnly) {
     return (
       <Table.Tr>
-        <Table.Td>{Description}</Table.Td>
-        <Table.Td>${UnitAmount}</Table.Td>
-        <Table.Td>{Unit}</Table.Td>
-        <Table.Td>{Quantity}</Table.Td>
+        <Table.Td>{formValues.Description}</Table.Td>
+        <Table.Td>${formValues.UnitAmount}</Table.Td>
+        <Table.Td>{formValues.Unit}</Table.Td>
+        <Table.Td>{formValues.Quantity}</Table.Td>
         <Table.Td>${total}</Table.Td>
         <Table.Td>
-          {Actualized ? (
+          {formValues.Actualized ? (
             <IconCheck color="#309e04" />
           ) : (
             <IconCircleDashed color="#dda603" />
@@ -92,7 +89,7 @@ function ExpenseRow({ expense }: { expense: ExpenseRecord }) {
         <TextInput disabled={readOnly} {...form.getInputProps("Description")} />
       </Table.Td>
       <Table.Td>
-        <TextInput
+        <NumberInput
           disabled={readOnly}
           variant={readOnly ? "unstyled" : "default"}
           leftSection="$"
@@ -107,7 +104,7 @@ function ExpenseRow({ expense }: { expense: ExpenseRecord }) {
         />
       </Table.Td>
       <Table.Td>
-        <TextInput
+        <NumberInput
           disabled={readOnly}
           {...form.getInputProps("Quantity")}
           // className={"w-24"}
@@ -119,7 +116,11 @@ function ExpenseRow({ expense }: { expense: ExpenseRecord }) {
         <Checkbox {...form.getInputProps("Actualized", { type: "checkbox" })} />
       </Table.Td>
       <Table.Td>
-        <ActionIcon onClick={handleExpenseSave} variant="subtle">
+        <ActionIcon
+          loading={saving}
+          onClick={handleExpenseSave}
+          variant="subtle"
+        >
           <IconDeviceFloppy />
         </ActionIcon>
       </Table.Td>

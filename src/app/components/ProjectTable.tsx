@@ -1,4 +1,4 @@
-import { Button, Table } from "@mantine/core";
+import { Button, LoadingOverlay, Table } from "@mantine/core";
 import { HttpsCallable, httpsCallable } from "firebase/functions";
 import { useEffect, useState } from "react";
 import { functions } from "../firebase/main";
@@ -43,6 +43,7 @@ export function ProjectTable() {
           onClick={() => handleExpenseClick(project)}
           variant="outline"
           rightSection={<IconArrowNarrowRight />}
+          size="xs"
         >
           Expenses
         </Button>
@@ -52,6 +53,7 @@ export function ProjectTable() {
 
   return (
     <>
+      <LoadingOverlay visible={loading} />
       <Table>
         <Table.Thead>
           <Table.Tr>

@@ -1,4 +1,11 @@
-import { Button, Drawer, Stack, Table } from "@mantine/core";
+import {
+  Button,
+  Drawer,
+  Loader,
+  LoadingOverlay,
+  Stack,
+  Table,
+} from "@mantine/core";
 import { httpsCallable } from "firebase/functions";
 import { useEffect, useState } from "react";
 import { functions } from "../../firebase/main";
@@ -82,6 +89,7 @@ export function ExpenseDrawer({
       position="right"
       size={"xl"}
     >
+      <LoadingOverlay visible={loading} />
       <Stack gap={"md"}>
         <Table>
           <Table.Thead>
