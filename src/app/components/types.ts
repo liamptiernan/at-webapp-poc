@@ -15,6 +15,8 @@ export interface ProjectsRecord {
         Status?: string;
         "Youtube Link"?: string;
         Expenses?: unknown[];
+        "Publish Date"?: string;
+        "Actualized"?: boolean;
     }
 }
 

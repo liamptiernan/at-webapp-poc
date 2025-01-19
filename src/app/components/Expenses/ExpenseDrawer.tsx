@@ -88,7 +88,7 @@ export function ExpenseDrawer({
     <Drawer
       opened={opened}
       onClose={onClose}
-      title={<Title order={2}>{`${activeProject.fields.Name} Expenses`}</Title>}
+      title={`${activeProject.fields.Name} Expenses`}
       position="right"
       size={"xl"}
     >
