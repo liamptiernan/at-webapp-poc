@@ -1,4 +1,4 @@
-import { Button, LoadingOverlay, Table } from "@mantine/core";
+import { Button, LoadingOverlay, Paper, Table, Title } from "@mantine/core";
 import { HttpsCallable, httpsCallable } from "firebase/functions";
 import { useEffect, useState } from "react";
 import { functions } from "../firebase/main";
@@ -18,7 +18,7 @@ export function ProjectTable() {
   useEffect(() => {
     const fetchProjectData = async () => {
       setLoading(true);
-      const test = httpsCallable(functions, "on_request_example");
+      const test = httpsCallable(functions, "fetch_projects");
       const result = (await test()) as ProjectsResponse;
       setProjects(result.data.records);
       setLoading(false);
@@ -53,6 +53,16 @@ export function ProjectTable() {
 
   return (
     <>
+      <Paper
+        p="lg"
+        withBorder
+        h={"60px"}
+        display={"flex"}
+        mb={20}
+        style={{ alignItems: "center" }}
+      >
+        <Title order={1}>Projects</Title>
+      </Paper>
       <LoadingOverlay visible={loading} />
       <Table>
         <Table.Thead>

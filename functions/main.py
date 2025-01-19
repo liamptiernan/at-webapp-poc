@@ -24,11 +24,11 @@ cors_origins = ["http://localhost:3000"]
         cors_origins=cors_origins,
         cors_methods=["get", "post"],
     ))
-def on_request_example(req: https_fn.Request) -> https_fn.Response:
+def fetch_projects(req: https_fn.Request) -> https_fn.Response:
     airtable = create_airtable_client(settings.airtable_api_key.value)
     table = airtable.table(settings.airtable_base_id.value, "Projects")
 
-    return {"data": {"records": table.all()}}
+    return {"data": {"records": table.all(sort=["Name"])}}
 
 @https_fn.on_request(
         secrets=[settings.airtable_base_id, settings.airtable_api_key],        

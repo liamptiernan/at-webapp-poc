@@ -17,6 +17,7 @@ import {
 } from "@tabler/icons-react";
 import { httpsCallable } from "firebase/functions";
 import { functions } from "@/app/firebase/main";
+import { notifications } from "@mantine/notifications";
 
 function ExpenseRow({ expense }: { expense: ExpenseRecord }) {
   const [saving, setSaving] = useState(false);
@@ -46,12 +47,17 @@ function ExpenseRow({ expense }: { expense: ExpenseRecord }) {
     const { UnitAmount, ...fields } = formValues;
     const updateExpense = httpsCallable(functions, "update_expense");
 
-    await updateExpense({
-      expenseId: expense.id,
-      fields: { "Unit Amount": UnitAmount, ...fields },
-    });
-    setSaving(false);
-    setReadOnly(true);
+    try {
+      await updateExpense({
+        expenseId: expense.id,
+        fields: { "Unit Amount": UnitAmount, ...fields },
+      });
+      setSaving(false);
+      setReadOnly(true);
+    } catch (error) {
+      console.error(error);
+      setSaving(false);
+    }
   };
 
   let total = 0;
