@@ -18,38 +18,49 @@ import {
 import { httpsCallable } from "firebase/functions";
 import { functions } from "@/app/firebase/main";
 
-function ExpenseRow({ expense }: { expense: ExpenseRecord }) {
+function ExpenseRow({
+  expense,
+  actualizingExpenses,
+}: {
+  expense: ExpenseRecord;
+  actualizingExpenses: boolean;
+}) {
   const [saving, setSaving] = useState(false);
   const [readOnly, setReadOnly] = useState(Boolean(expense.id));
 
   const {
     Description,
-    Actualized,
     ["Unit Amount"]: UnitAmount,
     Unit,
     Quantity,
+    ["Actual Total"]: ActualTotal,
   } = expense.fields;
 
   const form = useForm({
     initialValues: {
       Description,
-      Actualized: Actualized || false,
+      Actualized: ActualTotal !== undefined,
       UnitAmount,
       Unit,
       Quantity,
+      ActualTotal,
     },
   });
   const formValues = form.getValues();
 
   const handleExpenseSave = async () => {
     setSaving(true);
-    const { UnitAmount, ...fields } = formValues;
+    const { UnitAmount, ActualTotal, ...fields } = formValues;
     const updateExpense = httpsCallable(functions, "update_expense");
 
     try {
       await updateExpense({
         expenseId: expense.id,
-        fields: { "Unit Amount": UnitAmount, ...fields },
+        fields: {
+          "Actual Total": ActualTotal,
+          "Unit Amount": UnitAmount,
+          ...fields,
+        },
       });
       setSaving(false);
       setReadOnly(true);
@@ -64,7 +75,7 @@ function ExpenseRow({ expense }: { expense: ExpenseRecord }) {
     total = formValues.UnitAmount * formValues.Quantity;
   }
 
-  if (readOnly) {
+  if (actualizingExpenses) {
     return (
       <Table.Tr>
         <Table.Td>{formValues.Description}</Table.Td>
@@ -72,6 +83,32 @@ function ExpenseRow({ expense }: { expense: ExpenseRecord }) {
         <Table.Td>{formValues.Unit}</Table.Td>
         <Table.Td>{formValues.Quantity}</Table.Td>
         <Table.Td>${total}</Table.Td>
+        <Table.Td style={{ maxWidth: "100px" }}>
+          <NumberInput
+            hideControls
+            prefix="$"
+            {...form.getInputProps("ActualTotal")}
+          />
+        </Table.Td>
+        <Table.Td>
+          <Checkbox
+            {...form.getInputProps("Actualized", { type: "checkbox" })}
+          />
+        </Table.Td>
+        <Table.Td></Table.Td>
+      </Table.Tr>
+    );
+  }
+
+  if (readOnly) {
+    return (
+      <Table.Tr style={{ height: "51px" }}>
+        <Table.Td>{formValues.Description}</Table.Td>
+        <Table.Td>${formValues.UnitAmount}</Table.Td>
+        <Table.Td>{formValues.Unit}</Table.Td>
+        <Table.Td>{formValues.Quantity}</Table.Td>
+        <Table.Td>${total}</Table.Td>
+        <Table.Td>${formValues.ActualTotal || " -"}</Table.Td>
         <Table.Td>
           {formValues.Actualized ? (
             <IconCheck color="#309e04" />
@@ -117,6 +154,7 @@ function ExpenseRow({ expense }: { expense: ExpenseRecord }) {
         />
       </Table.Td>
       <Table.Td>${total}</Table.Td>
+      <Table.Td>${formValues.ActualTotal || " -"}</Table.Td>
       <Table.Td>
         <Checkbox {...form.getInputProps("Actualized", { type: "checkbox" })} />
       </Table.Td>
@@ -135,13 +173,21 @@ function ExpenseRow({ expense }: { expense: ExpenseRecord }) {
 
 interface ExpenseRowsProps {
   expenses: ExpenseRecord[];
+  actualizingExpenses: boolean;
 }
 
-export function ExpenseRows({ expenses }: ExpenseRowsProps) {
+export function ExpenseRows({
+  expenses,
+  actualizingExpenses,
+}: ExpenseRowsProps) {
   return (
     <Table.Tbody>
       {expenses.map((expense, i) => (
-        <ExpenseRow expense={expense} key={i} />
+        <ExpenseRow
+          expense={expense}
+          key={i}
+          actualizingExpenses={actualizingExpenses}
+        />
       ))}
     </Table.Tbody>
   );

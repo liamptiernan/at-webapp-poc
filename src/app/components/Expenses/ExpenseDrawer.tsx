@@ -16,7 +16,11 @@ import {
   ProjectsRecord,
 } from "../types";
 import { ExpenseRows } from "./ExpenseRows";
-import { IconPlus } from "@tabler/icons-react";
+import {
+  IconCircleCheckFilled,
+  IconCircleDashedCheck,
+  IconPlus,
+} from "@tabler/icons-react";
 
 interface ExpenseDrawerProps {
   activeProject: ProjectsRecord | undefined;
@@ -32,6 +36,11 @@ export function ExpenseDrawer({
   const [loading, setLoading] = useState(false);
   const [addingExpense, setAddingExpense] = useState(false);
   const [expenses, setExpenses] = useState<ExpenseRecord[]>([]);
+  const [actualizingExpenses, setActualizingExpenses] = useState(false);
+
+  const confirmActuals = async () => {
+    setActualizingExpenses(false);
+  };
 
   const addExpense = async () => {
     if (!activeProject) {
@@ -94,6 +103,27 @@ export function ExpenseDrawer({
     >
       <LoadingOverlay visible={loading} />
       <Stack gap={"md"}>
+        {actualizingExpenses ? (
+          <Button
+            style={{ alignSelf: "flex-end" }}
+            loading={addingExpense}
+            onClick={confirmActuals}
+            rightSection={<IconCircleCheckFilled />}
+            variant="primary"
+          >
+            Confirm
+          </Button>
+        ) : (
+          <Button
+            style={{ alignSelf: "flex-end" }}
+            loading={addingExpense}
+            onClick={() => setActualizingExpenses(true)}
+            rightSection={<IconCircleDashedCheck />}
+            variant="outline"
+          >
+            Actualize
+          </Button>
+        )}
         <Table>
           <Table.Thead>
             <Table.Tr>
@@ -102,11 +132,15 @@ export function ExpenseDrawer({
               <Table.Th>Unit</Table.Th>
               <Table.Th>Quantity</Table.Th>
               <Table.Th>Total</Table.Th>
+              <Table.Th>Actual Total</Table.Th>
               <Table.Th>Actualized</Table.Th>
-              <Table.Th>Edit</Table.Th>
+              <Table.Th></Table.Th>
             </Table.Tr>
           </Table.Thead>
-          <ExpenseRows expenses={expenses} />
+          <ExpenseRows
+            expenses={expenses}
+            actualizingExpenses={actualizingExpenses}
+          />
         </Table>
         <Button
           loading={addingExpense}

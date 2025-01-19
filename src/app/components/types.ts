@@ -38,6 +38,7 @@ export interface ExpenseRecord {
         Quantity?: number;
         Total?: number;
         Project: string[];
+        "Actual Total"?: number;
     }
 }
 
