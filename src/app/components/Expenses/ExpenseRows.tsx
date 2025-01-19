@@ -1,4 +1,4 @@
-import { useForm } from "@mantine/form";
+import { useForm, UseFormReturnType } from "@mantine/form";
 import { ExpenseRecord, unitOptions } from "../types";
 import {
   ActionIcon,
@@ -19,49 +19,38 @@ import { httpsCallable } from "firebase/functions";
 import { functions } from "@/app/firebase/main";
 
 function ExpenseRow({
+  form,
   expense,
+  idx,
   actualizingExpenses,
 }: {
+  form: UseFormReturnType<{ expenses: ExpenseRecord[] }>;
   expense: ExpenseRecord;
+  idx: number;
   actualizingExpenses: boolean;
 }) {
   const [saving, setSaving] = useState(false);
   const [readOnly, setReadOnly] = useState(Boolean(expense.id));
 
-  const {
-    Description,
-    ["Unit Amount"]: UnitAmount,
-    Unit,
-    Quantity,
-    ["Actual Total"]: ActualTotal,
-  } = expense.fields;
-
-  const form = useForm({
-    initialValues: {
-      Description,
-      Actualized: ActualTotal !== undefined,
-      UnitAmount,
-      Unit,
-      Quantity,
-      ActualTotal,
-    },
-  });
-  const formValues = form.getValues();
-
   const handleExpenseSave = async () => {
     setSaving(true);
-    const { UnitAmount, ActualTotal, ...fields } = formValues;
     const updateExpense = httpsCallable(functions, "update_expense");
+    const formExpense = form.getValues().expenses[idx];
+
+    const { Description, Unit, Quantity } = formExpense.fields;
 
     try {
       await updateExpense({
         expenseId: expense.id,
         fields: {
-          "Actual Total": ActualTotal,
-          "Unit Amount": UnitAmount,
-          ...fields,
+          Description,
+          Unit,
+          Quantity,
+          ["Unit Amount"]: formExpense.fields["Unit Amount"],
+          ["Actual Total"]: formExpense.fields["Actual Total"],
         },
       });
+
       setSaving(false);
       setReadOnly(true);
     } catch (error) {
@@ -71,28 +60,30 @@ function ExpenseRow({
   };
 
   let total = 0;
-  if (formValues.UnitAmount && formValues.Quantity) {
-    total = formValues.UnitAmount * formValues.Quantity;
+  if (expense.fields["Unit Amount"] && expense.fields.Quantity) {
+    total = expense.fields["Unit Amount"] * expense.fields.Quantity;
   }
 
   if (actualizingExpenses) {
     return (
       <Table.Tr>
-        <Table.Td>{formValues.Description}</Table.Td>
-        <Table.Td>${formValues.UnitAmount}</Table.Td>
-        <Table.Td>{formValues.Unit}</Table.Td>
-        <Table.Td>{formValues.Quantity}</Table.Td>
+        <Table.Td>{expense.fields.Description}</Table.Td>
+        <Table.Td>${expense.fields["Unit Amount"]}</Table.Td>
+        <Table.Td>{expense.fields.Unit}</Table.Td>
+        <Table.Td>{expense.fields.Quantity}</Table.Td>
         <Table.Td>${total}</Table.Td>
         <Table.Td style={{ maxWidth: "100px" }}>
           <NumberInput
             hideControls
             prefix="$"
-            {...form.getInputProps("ActualTotal")}
+            {...form.getInputProps(`expenses.${idx}.fields.Actual Total`)}
           />
         </Table.Td>
         <Table.Td>
           <Checkbox
-            {...form.getInputProps("Actualized", { type: "checkbox" })}
+            {...form.getInputProps(`expenses.${idx}.fields.Actualized`, {
+              type: "checkbox",
+            })}
           />
         </Table.Td>
         <Table.Td></Table.Td>
@@ -103,14 +94,14 @@ function ExpenseRow({
   if (readOnly) {
     return (
       <Table.Tr style={{ height: "51px" }}>
-        <Table.Td>{formValues.Description}</Table.Td>
-        <Table.Td>${formValues.UnitAmount}</Table.Td>
-        <Table.Td>{formValues.Unit}</Table.Td>
-        <Table.Td>{formValues.Quantity}</Table.Td>
+        <Table.Td>{expense.fields.Description}</Table.Td>
+        <Table.Td>${expense.fields["Unit Amount"]}</Table.Td>
+        <Table.Td>{expense.fields.Unit}</Table.Td>
+        <Table.Td>{expense.fields.Quantity}</Table.Td>
         <Table.Td>${total}</Table.Td>
-        <Table.Td>${formValues.ActualTotal || " -"}</Table.Td>
+        <Table.Td>${expense.fields["Actual Total"] || " -"}</Table.Td>
         <Table.Td>
-          {formValues.Actualized ? (
+          {expense.fields.Actualized ? (
             <IconCheck color="#309e04" />
           ) : (
             <IconCircleDashed color="#dda603" />
@@ -128,35 +119,38 @@ function ExpenseRow({
   return (
     <Table.Tr>
       <Table.Td>
-        <TextInput disabled={readOnly} {...form.getInputProps("Description")} />
+        <TextInput
+          {...form.getInputProps(`expenses.${idx}.fields.Description`)}
+        />
       </Table.Td>
       <Table.Td>
         <NumberInput
-          disabled={readOnly}
           variant={readOnly ? "unstyled" : "default"}
           leftSection="$"
-          {...form.getInputProps("UnitAmount")}
+          {...form.getInputProps(`expenses.${idx}.fields.Unit Amount`)}
         />
       </Table.Td>
       <Table.Td>
         <Select
-          disabled={readOnly}
           data={unitOptions}
-          {...form.getInputProps("Unit")}
+          {...form.getInputProps(`expenses.${idx}.fields.Unit`)}
         />
       </Table.Td>
       <Table.Td>
         <NumberInput
-          disabled={readOnly}
-          {...form.getInputProps("Quantity")}
+          {...form.getInputProps(`expenses.${idx}.fields.Quantity`)}
           // className={"w-24"}
           width={"60px"}
         />
       </Table.Td>
       <Table.Td>${total}</Table.Td>
-      <Table.Td>${formValues.ActualTotal || " -"}</Table.Td>
+      <Table.Td>${expense.fields["Actual Total"] || " -"}</Table.Td>
       <Table.Td>
-        <Checkbox {...form.getInputProps("Actualized", { type: "checkbox" })} />
+        <Checkbox
+          {...form.getInputProps(`expenses.${idx}.fields.Actualized`, {
+            type: "checkbox",
+          })}
+        />
       </Table.Td>
       <Table.Td>
         <ActionIcon
@@ -172,19 +166,18 @@ function ExpenseRow({
 }
 
 interface ExpenseRowsProps {
-  expenses: ExpenseRecord[];
+  form: UseFormReturnType<{ expenses: ExpenseRecord[] }>;
   actualizingExpenses: boolean;
 }
 
-export function ExpenseRows({
-  expenses,
-  actualizingExpenses,
-}: ExpenseRowsProps) {
+export function ExpenseRows({ form, actualizingExpenses }: ExpenseRowsProps) {
   return (
     <Table.Tbody>
-      {expenses.map((expense, i) => (
+      {form.getValues().expenses.map((expense, i) => (
         <ExpenseRow
+          form={form}
           expense={expense}
+          idx={i}
           key={i}
           actualizingExpenses={actualizingExpenses}
         />

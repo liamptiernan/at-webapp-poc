@@ -39,14 +39,15 @@ export function ProjectTable() {
   const [drawerOpened, { open: openDrawer, close: closeDrawer }] =
     useDisclosure(false);
 
+  const fetchProjectData = async () => {
+    setLoading(true);
+    const test = httpsCallable(functions, "fetch_projects");
+    const result = (await test()) as ProjectsResponse;
+    setProjects(result.data.records);
+    setLoading(false);
+  };
+
   useEffect(() => {
-    const fetchProjectData = async () => {
-      setLoading(true);
-      const test = httpsCallable(functions, "fetch_projects");
-      const result = (await test()) as ProjectsResponse;
-      setProjects(result.data.records);
-      setLoading(false);
-    };
     fetchProjectData();
   }, []);
 
@@ -78,7 +79,6 @@ export function ProjectTable() {
         <Table.Td>
           <Badge
             color={project.fields.Status && statusColors[project.fields.Status]}
-            // color={"blue"}
           >
             {project.fields.Status}
           </Badge>
@@ -125,7 +125,6 @@ export function ProjectTable() {
             <Table.Th>Status</Table.Th>
             <Table.Th>Youtube Link</Table.Th>
             <Table.Th>Publish Date</Table.Th>
-            <Table.Th>Expenses</Table.Th>
           </Table.Tr>
         </Table.Thead>
         <Table.Tbody>{rows}</Table.Tbody>
@@ -134,6 +133,8 @@ export function ProjectTable() {
         activeProject={currentExpenseProject}
         opened={drawerOpened}
         onClose={closeDrawer}
+        onRefresh={fetchProjectData}
+        isActualized={currentExpenseProject?.fields["Actualized"] || false}
       />
     </>
   );

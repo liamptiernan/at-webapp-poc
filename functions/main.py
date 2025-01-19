@@ -1,6 +1,3 @@
-# Welcome to Cloud Functions for Firebase for Python!
-# To get started, simply uncomment the below code or create your own.
-# Deploy with `firebase deploy`
 import json
 
 from firebase_functions import https_fn, options
@@ -56,6 +53,24 @@ def update_expense(req: https_fn.Request) -> https_fn.Response:
     airtable = create_airtable_client(settings.airtable_api_key.value)
     table = airtable.table(settings.airtable_base_id.value, "Expenses")
     table.update(data_dict["expenseId"], data_dict["fields"])
+
+    return {"data": "success"}
+
+
+@https_fn.on_request(
+        secrets=[settings.airtable_base_id, settings.airtable_api_key],        
+        cors=options.CorsOptions(
+        cors_origins=cors_origins,
+        cors_methods=["get", "post"],
+    ))
+def actualize_expenses(req: https_fn.Request) -> https_fn.Response:
+    data_dict = json.loads(req.data)["data"]
+    airtable = create_airtable_client(settings.airtable_api_key.value)
+    table = airtable.table(settings.airtable_base_id.value, "Expenses")
+    table.batch_update(data_dict["updates"])
+
+    project_table = airtable.table(settings.airtable_base_id.value, "Projects")
+    project_table.update(data_dict["projectId"], {"Actualized": True})
 
     return {"data": "success"}
 

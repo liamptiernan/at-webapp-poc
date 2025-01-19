@@ -21,26 +21,32 @@ import {
   IconCircleDashedCheck,
   IconPlus,
 } from "@tabler/icons-react";
+import { useForm } from "@mantine/form";
+import { ActualizeAction } from "./ActualizeAction";
 
 interface ExpenseDrawerProps {
-  activeProject: ProjectsRecord | undefined;
+  activeProject?: ProjectsRecord;
   opened: boolean;
   onClose: () => void;
+  onRefresh: () => Promise<void>;
+  isActualized: boolean;
 }
 
 export function ExpenseDrawer({
   activeProject,
   opened,
   onClose,
+  onRefresh,
+  isActualized,
 }: ExpenseDrawerProps) {
   const [loading, setLoading] = useState(false);
   const [addingExpense, setAddingExpense] = useState(false);
-  const [expenses, setExpenses] = useState<ExpenseRecord[]>([]);
   const [actualizingExpenses, setActualizingExpenses] = useState(false);
-
-  const confirmActuals = async () => {
-    setActualizingExpenses(false);
-  };
+  const form = useForm<{ expenses: ExpenseRecord[] }>({
+    initialValues: {
+      expenses: [],
+    },
+  });
 
   const addExpense = async () => {
     if (!activeProject) {
@@ -64,7 +70,8 @@ export function ExpenseDrawer({
 
     newExpense.id = res?.data?.id;
 
-    setExpenses([...expenses, newExpense]);
+    const expenses = form.getValues().expenses;
+    form.setFieldValue("expenses", [...expenses, newExpense]);
     setAddingExpense(false);
   };
 
@@ -82,7 +89,7 @@ export function ExpenseDrawer({
       const result = (await fetchExpenses({
         projectId: activeProject?.id,
       })) as ExpensesResponse;
-      setExpenses(result.data.records);
+      form.setFieldValue("expenses", result.data.records);
       setLoading(false);
     };
 
@@ -103,27 +110,14 @@ export function ExpenseDrawer({
     >
       <LoadingOverlay visible={loading} />
       <Stack gap={"md"}>
-        {actualizingExpenses ? (
-          <Button
-            style={{ alignSelf: "flex-end" }}
-            loading={addingExpense}
-            onClick={confirmActuals}
-            rightSection={<IconCircleCheckFilled />}
-            variant="primary"
-          >
-            Confirm
-          </Button>
-        ) : (
-          <Button
-            style={{ alignSelf: "flex-end" }}
-            loading={addingExpense}
-            onClick={() => setActualizingExpenses(true)}
-            rightSection={<IconCircleDashedCheck />}
-            variant="outline"
-          >
-            Actualize
-          </Button>
-        )}
+        <ActualizeAction
+          actualized={isActualized}
+          actualizingExpenses={actualizingExpenses}
+          form={form}
+          setActualizingExpenses={setActualizingExpenses}
+          onRefresh={onRefresh}
+          activeProject={activeProject}
+        />
         <Table>
           <Table.Thead>
             <Table.Tr>
@@ -137,10 +131,7 @@ export function ExpenseDrawer({
               <Table.Th></Table.Th>
             </Table.Tr>
           </Table.Thead>
-          <ExpenseRows
-            expenses={expenses}
-            actualizingExpenses={actualizingExpenses}
-          />
+          <ExpenseRows form={form} actualizingExpenses={actualizingExpenses} />
         </Table>
         <Button
           loading={addingExpense}
