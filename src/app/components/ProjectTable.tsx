@@ -1,5 +1,5 @@
 import { Button, LoadingOverlay, Paper, Table, Title } from "@mantine/core";
-import { HttpsCallable, httpsCallable } from "firebase/functions";
+import { httpsCallable } from "firebase/functions";
 import { useEffect, useState } from "react";
 import { functions } from "../firebase/main";
 import { ProjectsRecord, ProjectsResponse } from "./types";

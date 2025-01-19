@@ -17,7 +17,6 @@ import {
 } from "@tabler/icons-react";
 import { httpsCallable } from "firebase/functions";
 import { functions } from "@/app/firebase/main";
-import { notifications } from "@mantine/notifications";
 
 function ExpenseRow({ expense }: { expense: ExpenseRecord }) {
   const [saving, setSaving] = useState(false);

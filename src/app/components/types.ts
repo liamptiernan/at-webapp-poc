@@ -18,7 +18,7 @@ export interface ProjectsRecord {
     }
 }
 
-export interface ProjectsResponse extends AirtableArrayResponse<ProjectsRecord> {}
+export type ProjectsResponse = AirtableArrayResponse<ProjectsRecord>
 
 export const unitOptions = [
     "Day",
@@ -39,5 +39,5 @@ export interface ExpenseRecord {
     }
 }
 
-export interface ExpensesResponse extends AirtableArrayResponse<ExpenseRecord> {}
-export interface ExpenseResponse extends AirtableResponse<ExpenseRecord> {}
+export type ExpensesResponse = AirtableArrayResponse<ExpenseRecord>;
+export type ExpenseResponse = AirtableResponse<ExpenseRecord>

@@ -1,10 +1,10 @@
 import {
   Button,
   Drawer,
-  Loader,
   LoadingOverlay,
   Stack,
   Table,
+  Title,
 } from "@mantine/core";
 import { httpsCallable } from "firebase/functions";
 import { useEffect, useState } from "react";
@@ -30,12 +30,14 @@ export function ExpenseDrawer({
   onClose,
 }: ExpenseDrawerProps) {
   const [loading, setLoading] = useState(false);
+  const [addingExpense, setAddingExpense] = useState(false);
   const [expenses, setExpenses] = useState<ExpenseRecord[]>([]);
 
   const addExpense = async () => {
     if (!activeProject) {
       return;
     }
+    setAddingExpense(true);
     const newExpense = {
       id: "",
       fields: {
@@ -54,6 +56,7 @@ export function ExpenseDrawer({
     newExpense.id = res?.data?.id;
 
     setExpenses([...expenses, newExpense]);
+    setAddingExpense(false);
   };
 
   useEffect(() => {
@@ -85,7 +88,7 @@ export function ExpenseDrawer({
     <Drawer
       opened={opened}
       onClose={onClose}
-      title={`${activeProject.fields.Name} Expenses`}
+      title={<Title order={2}>{`${activeProject.fields.Name} Expenses`}</Title>}
       position="right"
       size={"xl"}
     >
@@ -106,6 +109,7 @@ export function ExpenseDrawer({
           <ExpenseRows expenses={expenses} />
         </Table>
         <Button
+          loading={addingExpense}
           onClick={addExpense}
           leftSection={<IconPlus />}
           variant="outline"

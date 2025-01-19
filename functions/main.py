@@ -15,7 +15,7 @@ initialize_app()
 def create_airtable_client(api_key: str) -> Api:
     return Api(api_key)
 
-cors_origins = ["http://localhost:3000"]
+cors_origins = ["http://localhost:3000", "https://at-poc-35d44.web.app"]
 
 
 @https_fn.on_request(
