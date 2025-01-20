@@ -1,10 +1,11 @@
 import {
   Button,
   Drawer,
+  Flex,
   LoadingOverlay,
   Stack,
   Table,
-  Title,
+  Text,
 } from "@mantine/core";
 import { httpsCallable } from "firebase/functions";
 import { useEffect, useState } from "react";
@@ -16,11 +17,7 @@ import {
   ProjectsRecord,
 } from "../types";
 import { ExpenseRows } from "./ExpenseRows";
-import {
-  IconCircleCheckFilled,
-  IconCircleDashedCheck,
-  IconPlus,
-} from "@tabler/icons-react";
+import { IconPlus } from "@tabler/icons-react";
 import { useForm } from "@mantine/form";
 import { ActualizeAction } from "./ActualizeAction";
 
@@ -89,7 +86,14 @@ export function ExpenseDrawer({
       const result = (await fetchExpenses({
         projectId: activeProject?.id,
       })) as ExpensesResponse;
-      form.setFieldValue("expenses", result.data.records);
+      const defaults = result.data.records.map((expense) => ({
+        ...expense,
+        fields: {
+          ...expense.fields,
+          Actualized: expense.fields["Actualized"] || false,
+        },
+      }));
+      form.setFieldValue("expenses", defaults);
       setLoading(false);
     };
 
@@ -99,6 +103,20 @@ export function ExpenseDrawer({
   if (!activeProject) {
     return null;
   }
+
+  const values = form.getValues();
+  const grandTotal = values.expenses.reduce((acc, expense) => {
+    if (expense.fields["Quantity"] && expense.fields["Unit Amount"]) {
+      return acc + expense.fields["Quantity"] * expense.fields["Unit Amount"];
+    }
+    return acc;
+  }, 0);
+  const grandActualized = values.expenses.reduce((acc, expense) => {
+    if (expense.fields["Actual Total"]) {
+      return acc + expense.fields["Actual Total"];
+    }
+    return acc;
+  }, 0);
 
   return (
     <Drawer
@@ -131,9 +149,18 @@ export function ExpenseDrawer({
               <Table.Th></Table.Th>
             </Table.Tr>
           </Table.Thead>
-          <ExpenseRows form={form} actualizingExpenses={actualizingExpenses} />
+          <ExpenseRows
+            form={form}
+            actualizingExpenses={actualizingExpenses}
+            isActualized={isActualized}
+          />
         </Table>
+        <Flex direction="column" px={50} gap={"md"} align="flex-end">
+          <Text fw={"bold"}>Total: ${grandTotal}</Text>
+          <Text fw={"bold"}>Actualized: ${grandActualized}</Text>
+        </Flex>
         <Button
+          disabled={isActualized}
           loading={addingExpense}
           onClick={addExpense}
           leftSection={<IconPlus />}

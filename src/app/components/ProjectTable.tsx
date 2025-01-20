@@ -61,6 +61,12 @@ export function ProjectTable() {
       !project.fields["Actualized"] &&
       project.fields["Publish Date"] &&
       project.fields["Publish Date"] < new Date().toISOString();
+
+    const missingLink =
+      !project.fields["Youtube Link"] &&
+      project.fields["Publish Date"] &&
+      project.fields["Publish Date"] < new Date().toISOString();
+
     return (
       <Table.Tr key={i}>
         <Table.Td
@@ -70,6 +76,13 @@ export function ProjectTable() {
           {actualsOverdue && (
             <Tooltip label="Actuals are overdue">
               <ActionIcon variant="white" color="red">
+                <IconExclamationCircle />
+              </ActionIcon>
+            </Tooltip>
+          )}
+          {missingLink && (
+            <Tooltip label="Video is published but is missing Youtube Link">
+              <ActionIcon variant="white" color="yellow">
                 <IconExclamationCircle />
               </ActionIcon>
             </Tooltip>
@@ -116,19 +129,21 @@ export function ProjectTable() {
           <IconCameraCheck size={70} />
         </ThemeIcon>
       </Paper>
-      <LoadingOverlay visible={loading} />
-      <Table>
-        <Table.Thead>
-          <Table.Tr>
-            <Table.Th></Table.Th>
-            <Table.Th>Name</Table.Th>
-            <Table.Th>Status</Table.Th>
-            <Table.Th>Youtube Link</Table.Th>
-            <Table.Th>Publish Date</Table.Th>
-          </Table.Tr>
-        </Table.Thead>
-        <Table.Tbody>{rows}</Table.Tbody>
-      </Table>
+      <div>
+        <LoadingOverlay visible={loading} />
+        <Table>
+          <Table.Thead>
+            <Table.Tr>
+              <Table.Th></Table.Th>
+              <Table.Th>Name</Table.Th>
+              <Table.Th>Status</Table.Th>
+              <Table.Th>Youtube Link</Table.Th>
+              <Table.Th>Publish Date</Table.Th>
+            </Table.Tr>
+          </Table.Thead>
+          <Table.Tbody>{rows}</Table.Tbody>
+        </Table>
+      </div>
       <ExpenseDrawer
         activeProject={currentExpenseProject}
         opened={drawerOpened}

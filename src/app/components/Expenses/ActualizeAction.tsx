@@ -1,7 +1,12 @@
 import { functions } from "@/app/firebase/main";
-import { Badge, Button } from "@mantine/core";
+import { ActionIcon, Badge, Button, Flex, Tooltip } from "@mantine/core";
 import { UseFormReturnType } from "@mantine/form";
-import { IconChecks, IconCircleCheckFilled } from "@tabler/icons-react";
+import {
+  IconChecks,
+  IconCircleCheckFilled,
+  IconCopy,
+  IconX,
+} from "@tabler/icons-react";
 import { IconCircleDashedCheck } from "@tabler/icons-react";
 import { useState } from "react";
 import { ExpenseRecord, ProjectsRecord } from "../types";
@@ -54,6 +59,25 @@ export function ActualizeAction({
     setSavingActuals(false);
   };
 
+  const cancelActuals = () => {
+    setActualizingExpenses(false);
+    setActualsSubmitted(false);
+  };
+
+  const copyAll = () => {
+    const expenses = form.getValues().expenses;
+    form.setValues({
+      expenses: expenses.map((expense) => ({
+        ...expense,
+        fields: {
+          ...expense.fields,
+          "Actual Total": expense.fields["Total"],
+          Actualized: true,
+        },
+      })),
+    });
+  };
+
   if (actualized || actualsSubmitted) {
     return (
       <Badge
@@ -67,15 +91,42 @@ export function ActualizeAction({
   }
   if (actualizingExpenses) {
     return (
-      <Button
-        style={{ alignSelf: "flex-end" }}
-        loading={savingActuals}
-        onClick={confirmActuals}
-        rightSection={<IconCircleCheckFilled />}
-        variant="primary"
-      >
-        Confirm
-      </Button>
+      <Flex justify="flex-end" gap="md">
+        <Tooltip label="Copy all to actuals">
+          <ActionIcon
+            style={{ alignSelf: "flex-end" }}
+            onClick={copyAll}
+            radius="xl"
+            p={5}
+            my={"auto"}
+            variant="outline"
+          >
+            <IconCopy />
+          </ActionIcon>
+        </Tooltip>
+        <Tooltip label="Cancel">
+          <ActionIcon
+            style={{ alignSelf: "flex-end" }}
+            onClick={cancelActuals}
+            radius="xl"
+            p={5}
+            my={"auto"}
+            variant="outline"
+            color="red"
+          >
+            <IconX />
+          </ActionIcon>
+        </Tooltip>
+        <Button
+          style={{ alignSelf: "flex-end" }}
+          loading={savingActuals}
+          onClick={confirmActuals}
+          rightSection={<IconCircleCheckFilled />}
+          variant="primary"
+        >
+          Confirm
+        </Button>
+      </Flex>
     );
   }
 

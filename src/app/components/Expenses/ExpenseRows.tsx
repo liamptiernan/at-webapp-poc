@@ -23,11 +23,13 @@ function ExpenseRow({
   expense,
   idx,
   actualizingExpenses,
+  isActualized,
 }: {
   form: UseFormReturnType<{ expenses: ExpenseRecord[] }>;
   expense: ExpenseRecord;
   idx: number;
   actualizingExpenses: boolean;
+  isActualized: boolean;
 }) {
   const [saving, setSaving] = useState(false);
   const [readOnly, setReadOnly] = useState(Boolean(expense.id));
@@ -108,9 +110,11 @@ function ExpenseRow({
           )}
         </Table.Td>
         <Table.Td>
-          <ActionIcon onClick={() => setReadOnly(false)} variant="subtle">
-            <IconEdit />
-          </ActionIcon>
+          {!isActualized && (
+            <ActionIcon onClick={() => setReadOnly(false)} variant="subtle">
+              <IconEdit />
+            </ActionIcon>
+          )}
         </Table.Td>
       </Table.Tr>
     );
@@ -168,9 +172,14 @@ function ExpenseRow({
 interface ExpenseRowsProps {
   form: UseFormReturnType<{ expenses: ExpenseRecord[] }>;
   actualizingExpenses: boolean;
+  isActualized: boolean;
 }
 
-export function ExpenseRows({ form, actualizingExpenses }: ExpenseRowsProps) {
+export function ExpenseRows({
+  form,
+  actualizingExpenses,
+  isActualized,
+}: ExpenseRowsProps) {
   return (
     <Table.Tbody>
       {form.getValues().expenses.map((expense, i) => (
@@ -180,6 +189,7 @@ export function ExpenseRows({ form, actualizingExpenses }: ExpenseRowsProps) {
           idx={i}
           key={i}
           actualizingExpenses={actualizingExpenses}
+          isActualized={isActualized}
         />
       ))}
     </Table.Tbody>
